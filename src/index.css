@@ -1,0 +1,59 @@
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --color-bg-main: var(--bg);
+  --color-bg-card: var(--bg2);
+  --color-bg-hover: var(--bg3);
+  --color-accent: var(--accent);
+  --color-fg-main: var(--fg);
+  --color-fg-muted: var(--fg2);
+  --color-success: var(--green);
+  --color-selection: var(--sel);
+  --color-glass: var(--glass);
+  
+  --font-sans: 'DM Sans', ui-sans-serif, system-ui, sans-serif;
+  --font-mono: 'DM Mono', ui-monospace, SFMono-Regular, monospace;
+}
+
+@layer base {
+  :root {
+    --bg: #F5F7FA; 
+    --bg2: #FFFFFF; 
+    --bg3: #E4E8F0; 
+    --accent: #1B4D3E;
+    --fg: #2D3748; 
+    --fg2: #718096; 
+    --green: #276749;
+    --sel: rgba(27,77,62,0.08); 
+    --glass: rgba(255,255,255,0.85);
+    --shadow: 0 4px 16px rgba(0,0,0,0.04);
+    --safe-top: env(safe-area-inset-top, 0px); 
+    --safe-bot: env(safe-area-inset-bottom, 0px);
+  }
+
+  .dark {
+    --bg: #0A1411; 
+    --bg2: #11221D; 
+    --bg3: #1A332B; 
+    --accent: #48BB78;
+    --fg: #F0F4F8; 
+    --fg2: #A0AEC0; 
+    --green: #48BB78;
+    --sel: rgba(72,187,120,0.15); 
+    --glass: rgba(10,20,17,0.85);
+    --shadow: 0 4px 16px rgba(0,0,0,0.3);
+  }
+
+  * {
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  body {
+    @apply bg-bg-main text-fg-main font-sans antialiased transition-colors duration-300;
+    min-height: 100dvh;
+    overflow-x: hidden;
+    padding-top: var(--safe-top);
+    padding-bottom: var(--safe-bot);
+  }
+}
