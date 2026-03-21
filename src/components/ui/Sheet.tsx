@@ -1,4 +1,5 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 
 interface SheetProps {
   isOpen: boolean;
@@ -8,9 +9,15 @@ interface SheetProps {
 }
 
 export const Sheet: React.FC<SheetProps> = ({ isOpen, onClose, title, children }) => {
-  if (!isOpen) return null;
+  const [mounted, setMounted] = useState(false);
 
-  return (
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!isOpen || !mounted) return null;
+
+  return createPortal(
     <div 
       className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[200] flex items-end animate-in fade-in duration-200" 
       onClick={onClose}
@@ -27,6 +34,7 @@ export const Sheet: React.FC<SheetProps> = ({ isOpen, onClose, title, children }
           {children}
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 };

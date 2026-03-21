@@ -1,12 +1,13 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { db, collection, getDocs, query, orderBy, limit, doc, setDoc, serverTimestamp, getDoc } from '../firebase';
 import { useAuth } from '../contexts/AuthContext';
+import { useDate } from '../contexts/DateContext';
 import { DiaryDay, DiaryEntry } from '../types';
-import { todayISO } from '../utils/helpers';
 import { Sheet } from '../components/ui/Sheet';
 
 export const NotesView: React.FC = () => {
   const { user } = useAuth();
+  const { selectedDate } = useDate();
   const [diaryDays, setDiaryDays] = useState<DiaryDay[]>([]);
   const [loading, setLoading] = useState(true);
   
@@ -46,10 +47,12 @@ export const NotesView: React.FC = () => {
     loadDiary();
   }, [user]);
 
+  const selectedDateISO = selectedDate.getFullYear() + '-' + String(selectedDate.getMonth() + 1).padStart(2, '0') + '-' + String(selectedDate.getDate()).padStart(2, '0');
+
   const handleAddNote = async () => {
     if (!mainNote.trim() || !user) return;
     try {
-      const dRef = doc(db, 'users', user.uid, 'diary', todayISO());
+      const dRef = doc(db, 'users', user.uid, 'diary', selectedDateISO);
       const snap = await getDoc(dRef);
       const time = new Date().toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' });
       
@@ -68,9 +71,9 @@ export const NotesView: React.FC = () => {
       if (snap.exists()) {
         const entries = snap.data().entries || [];
         entries.unshift(entry);
-        await setDoc(dRef, { date: todayISO(), entries, updatedAt: serverTimestamp() }, { merge: true });
+        await setDoc(dRef, { date: selectedDateISO, entries, updatedAt: serverTimestamp() }, { merge: true });
       } else {
-        await setDoc(dRef, { date: todayISO(), entries: [entry], updatedAt: serverTimestamp() });
+        await setDoc(dRef, { date: selectedDateISO, entries: [entry], updatedAt: serverTimestamp() });
       }
       setMainNote('');
       setMainNoteTags('');
@@ -156,7 +159,7 @@ export const NotesView: React.FC = () => {
           value={mainNote}
           onChange={e => setMainNote(e.target.value)}
           className="w-full min-h-[100px] bg-bg-card text-fg-main border border-bg-hover rounded-2xl p-4 font-sans text-[15px] leading-relaxed resize-none outline-none focus:border-accent focus:ring-3 focus:ring-selection shadow-sm transition-all mb-3"
-          placeholder="Aggiungi una nota alla giornata di oggi..."
+          placeholder={`Aggiungi una nota al ${selectedDate.toLocaleDateString('it-IT', { day: '2-digit', month: 'long' })}...`}
         />
         <input 
           type="text"
@@ -241,16 +244,16 @@ export const NotesView: React.FC = () => {
                       )}
                     </div>
                     <div className="text-[15px] text-fg-main leading-relaxed whitespace-pre-wrap">{entry.text}</div>
-                    <div className="absolute top-3 right-3 flex gap-2 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
+                    <div className="mt-4 flex justify-end gap-2">
                       <button 
                         onClick={() => { setEditData({ date: day.date, id: entry.id, text: entry.text, tags: entry.tags?.join(', ') || '' }); setEditSheetOpen(true); }}
-                        className="bg-bg-main border-none text-xs font-semibold px-2 py-1 rounded-md text-fg-muted hover:bg-bg-hover hover:text-fg-main transition-colors"
+                        className="bg-bg-main border border-bg-hover text-xs font-semibold px-3 py-1.5 rounded-lg text-fg-muted hover:bg-bg-hover hover:text-fg-main transition-colors"
                       >
                         Modifica
                       </button>
                       <button 
                         onClick={() => handleDelete(day.date, entry.id)}
-                        className="bg-bg-main border-none text-xs font-semibold px-2 py-1 rounded-md text-fg-muted hover:bg-bg-hover hover:text-red-500 transition-colors"
+                        className="bg-bg-main border border-bg-hover text-xs font-semibold px-3 py-1.5 rounded-lg text-fg-muted hover:bg-bg-hover hover:text-red-500 hover:border-red-500 transition-colors"
                       >
                         Elimina
                       </button>

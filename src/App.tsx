@@ -10,6 +10,8 @@ import { EditorView } from './views/EditorView';
 import { BugView } from './views/BugView';
 import { NotesView } from './views/NotesView';
 
+import { DateProvider } from './contexts/DateContext';
+
 const MainApp: React.FC = () => {
   const { user, loading } = useAuth();
   const [activeTab, setActiveTab] = useState<TabType>('day');
@@ -28,11 +30,11 @@ const MainApp: React.FC = () => {
       <Tabs activeTab={activeTab} onChange={setActiveTab} />
       
       <main className="relative">
-        {activeTab === 'day' && <DayView />}
-        {activeTab === 'food' && <FoodView />}
-        {activeTab === 'editor' && <EditorView />}
-        {activeTab === 'notes' && <NotesView />}
-        {activeTab === 'bug' && <BugView />}
+        <div className={activeTab === 'day' ? 'block' : 'hidden'}><DayView /></div>
+        <div className={activeTab === 'food' ? 'block' : 'hidden'}><FoodView /></div>
+        <div className={activeTab === 'editor' ? 'block' : 'hidden'}><EditorView /></div>
+        <div className={activeTab === 'notes' ? 'block' : 'hidden'}><NotesView /></div>
+        <div className={activeTab === 'bug' ? 'block' : 'hidden'}><BugView /></div>
       </main>
     </div>
   );
@@ -42,7 +44,9 @@ export default function App() {
   return (
     <ThemeProvider>
       <AuthProvider>
-        <MainApp />
+        <DateProvider>
+          <MainApp />
+        </DateProvider>
       </AuthProvider>
     </ThemeProvider>
   );

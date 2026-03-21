@@ -62,27 +62,37 @@ export const BugView: React.FC = () => {
         <h2 className="text-[22px] font-bold text-fg-main tracking-tight">Note di Sviluppo</h2>
       </div>
 
-      <div className="flex gap-2.5 mb-6">
-        <select 
-          value={type} 
-          onChange={(e) => setType(e.target.value as 'bug' | 'feat')}
-          className="px-3 py-2.5 rounded-xl border border-bg-hover bg-bg-card text-fg-main font-sans text-sm font-medium outline-none shadow-sm"
-        >
-          <option value="bug">Bug</option>
-          <option value="feat">Feature</option>
-        </select>
-        <input 
-          value={inputText}
-          onChange={(e) => setInputText(e.target.value)}
-          placeholder="Descrivi qui..." 
-          className="flex-1 px-4 py-2.5 rounded-xl border border-bg-hover bg-bg-main text-fg-main font-sans text-[15px] font-medium outline-none focus:border-accent focus:ring-3 focus:ring-selection transition-all"
-        />
-        <button 
-          onClick={handleAdd}
-          className="px-5 py-2.5 rounded-xl bg-accent text-bg-card text-[15px] font-bold shadow-sm hover:scale-95 transition-all"
-        >
-          Aggiungi
-        </button>
+      <div className="flex flex-col sm:flex-row gap-2.5 mb-6">
+        <div className="flex gap-2.5">
+          <select 
+            value={type} 
+            onChange={(e) => setType(e.target.value as 'bug' | 'feat')}
+            className="px-3 py-2.5 rounded-xl border border-bg-hover bg-bg-card text-fg-main font-sans text-sm font-medium outline-none shadow-sm shrink-0"
+          >
+            <option value="bug">Bug</option>
+            <option value="feat">Feature</option>
+          </select>
+          <button 
+            onClick={handleAdd}
+            className="sm:hidden flex-1 px-5 py-2.5 rounded-xl bg-accent text-bg-card text-[15px] font-bold shadow-sm hover:scale-95 transition-all"
+          >
+            Aggiungi
+          </button>
+        </div>
+        <div className="flex flex-1 gap-2.5">
+          <input 
+            value={inputText}
+            onChange={(e) => setInputText(e.target.value)}
+            placeholder="Descrivi qui..." 
+            className="flex-1 px-4 py-2.5 rounded-xl border border-bg-hover bg-bg-main text-fg-main font-sans text-[15px] font-medium outline-none focus:border-accent focus:ring-3 focus:ring-selection transition-all min-w-0"
+          />
+          <button 
+            onClick={handleAdd}
+            className="hidden sm:block px-5 py-2.5 rounded-xl bg-accent text-bg-card text-[15px] font-bold shadow-sm hover:scale-95 transition-all shrink-0"
+          >
+            Aggiungi
+          </button>
+        </div>
       </div>
 
       <div className="space-y-3">

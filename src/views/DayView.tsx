@@ -1,21 +1,43 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useRoutineData } from '../hooks/useRoutineData';
-import { GIORNI, oggi, getDateForWeekday } from '../utils/helpers';
+import { GIORNI, oggi, getDateForWeekdayInWeek, WEEKDAY_MAP } from '../utils/helpers';
 import { TaskRow } from '../components/TaskRow';
 import { Task, AppState } from '../types';
 import { clsx } from 'clsx';
 import { db, doc, getDoc, setDoc, serverTimestamp } from '../firebase';
 import { useAuth } from '../contexts/AuthContext';
+import { useDate } from '../contexts/DateContext';
 
 export const DayView: React.FC = () => {
   const { user } = useAuth();
-  const [curDay, setCurDay] = useState(oggi());
-  const [curDateISO, setCurDateISO] = useState(getDateForWeekday(curDay));
+  const { selectedDate, setSelectedDate } = useDate();
+  
+  const curDateISO = selectedDate.getFullYear() + '-' + String(selectedDate.getMonth() + 1).padStart(2, '0') + '-' + String(selectedDate.getDate()).padStart(2, '0');
+  const curDay = WEEKDAY_MAP[selectedDate.getDay()];
+
   const { routine, state, saveState, loading } = useRoutineData(curDateISO);
   
   const [collapsed, setCollapsed] = useState<Set<string>>(new Set());
   const [isNoteOpen, setIsNoteOpen] = useState(false);
   const [dayNote, setDayNote] = useState('');
+
+  // Load existing notes for the day when date changes
+  useEffect(() => {
+    if (!user) return;
+    const loadDayNote = async () => {
+      try {
+        const dRef = doc(db, 'users', user.uid, 'diary', curDateISO);
+        const snap = await getDoc(dRef);
+        if (snap.exists() && snap.data().entries?.length > 0) {
+          // We don't populate the textarea with all notes, just keep it empty for new thoughts
+          // But we could show an indicator or just leave it as is.
+        }
+      } catch (e) {
+        console.error(e);
+      }
+    };
+    loadDayNote();
+  }, [curDateISO, user]);
 
   const toggleCollapse = (id: string) => {
     setCollapsed(prev => {
@@ -134,8 +156,7 @@ export const DayView: React.FC = () => {
           <button
             key={g}
             onClick={() => {
-              setCurDay(g);
-              setCurDateISO(getDateForWeekday(g));
+              setSelectedDate(getDateForWeekdayInWeek(g, selectedDate));
             }}
             className={clsx(
               "shrink-0 px-4 py-2 rounded-full text-[13px] font-semibold transition-all shadow-sm",

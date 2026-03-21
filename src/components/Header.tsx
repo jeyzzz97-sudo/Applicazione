@@ -1,8 +1,10 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
+import { useDate } from '../contexts/DateContext';
 import { signOut, auth } from '../firebase';
 import { clsx } from 'clsx';
+import { CalendarModal } from './CalendarModal';
 
 interface HeaderProps {
   isSyncing?: boolean;
@@ -11,6 +13,8 @@ interface HeaderProps {
 export const Header: React.FC<HeaderProps> = ({ isSyncing = false }) => {
   const { user } = useAuth();
   const { theme, toggleTheme, themeColor, setThemeColor } = useTheme();
+  const { selectedDate } = useDate();
+  const [isCalendarOpen, setIsCalendarOpen] = useState(false);
 
   const handleLogout = () => {
     if (window.confirm(`Connesso come:\n${user?.email}\n\nVuoi disconnetterti?`)) {
@@ -18,7 +22,7 @@ export const Header: React.FC<HeaderProps> = ({ isSyncing = false }) => {
     }
   };
 
-  const todayStr = new Date().toLocaleDateString('it-IT', { weekday: 'long', day: '2-digit', month: 'long' });
+  const todayStr = selectedDate.toLocaleDateString('it-IT', { weekday: 'long', day: '2-digit', month: 'long' });
 
   return (
     <div className="sticky top-0 z-50 bg-glass backdrop-blur-md pt-[calc(16px+var(--safe-top))] px-5 border-b border-bg-hover transition-colors duration-300">
@@ -53,9 +57,12 @@ export const Header: React.FC<HeaderProps> = ({ isSyncing = false }) => {
           >
             {theme === 'dark' ? 'Chiaro' : 'Scuro'}
           </button>
-          <span className="text-xs font-semibold text-fg-muted font-mono uppercase tracking-wide hidden sm:inline-block">
+          <button 
+            onClick={() => setIsCalendarOpen(true)}
+            className="text-xs font-semibold text-fg-muted font-mono uppercase tracking-wide hover:text-accent transition-colors"
+          >
             {todayStr}
-          </span>
+          </button>
           {user?.photoURL && (
             <img 
               src={user.photoURL} 
@@ -66,6 +73,7 @@ export const Header: React.FC<HeaderProps> = ({ isSyncing = false }) => {
           )}
         </div>
       </div>
+      <CalendarModal isOpen={isCalendarOpen} onClose={() => setIsCalendarOpen(false)} />
     </div>
   );
 };

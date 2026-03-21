@@ -1,14 +1,21 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useFoodData } from '../hooks/useFoodData';
-import { GIORNI, oggi, uid_gen } from '../utils/helpers';
+import { GIORNI, oggi, uid_gen, WEEKDAY_MAP, getDateForWeekdayInWeek, getFoodWeekForDate } from '../utils/helpers';
 import { clsx } from 'clsx';
 import { Sheet } from '../components/ui/Sheet';
 import { Meal } from '../types';
+import { useDate } from '../contexts/DateContext';
 
 export const FoodView: React.FC = () => {
   const { meals, mealPlan, saveMeals, saveMealPlan, loading } = useFoodData();
+  const { selectedDate, setSelectedDate } = useDate();
   const [curWeek, setCurWeek] = useState('1');
-  const [curDay, setCurDay] = useState(oggi());
+  
+  useEffect(() => {
+    setCurWeek(getFoodWeekForDate(selectedDate));
+  }, [selectedDate]);
+  
+  const curDay = WEEKDAY_MAP[selectedDate.getDay()];
 
   const [pickerOpen, setPickerOpen] = useState(false);
   const [editorOpen, setEditorOpen] = useState(false);
@@ -82,7 +89,7 @@ export const FoodView: React.FC = () => {
         {GIORNI.map(g => (
           <button
             key={g}
-            onClick={() => setCurDay(g)}
+            onClick={() => setSelectedDate(getDateForWeekdayInWeek(g, selectedDate))}
             className={clsx(
               "shrink-0 px-4 py-2 rounded-full text-[13px] font-semibold transition-all shadow-sm",
               g === curDay 
