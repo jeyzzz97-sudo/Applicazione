@@ -1,25 +1,42 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { useRoutineData } from '../hooks/useRoutineData';
+import { useCalendarEvents } from '../hooks/useCalendarEvents';
 import { GIORNI, oggi, getDateForWeekdayInWeek, WEEKDAY_MAP } from '../utils/helpers';
 import { TaskRow } from '../components/TaskRow';
 import { Task, AppState } from '../types';
 import { clsx } from 'clsx';
-import { db, doc, getDoc, setDoc, serverTimestamp } from '../firebase';
+import { db, doc, getDoc, setDoc, serverTimestamp, signInWithPopup, auth, googleProvider } from '../firebase';
+import { GoogleAuthProvider } from 'firebase/auth';
 import { useAuth } from '../contexts/AuthContext';
 import { useDate } from '../contexts/DateContext';
 
 export const DayView: React.FC = () => {
-  const { user } = useAuth();
+  const { user, googleAccessToken, setGoogleAccessToken } = useAuth();
   const { selectedDate, setSelectedDate } = useDate();
   
   const curDateISO = selectedDate.getFullYear() + '-' + String(selectedDate.getMonth() + 1).padStart(2, '0') + '-' + String(selectedDate.getDate()).padStart(2, '0');
   const curDay = WEEKDAY_MAP[selectedDate.getDay()];
 
   const { routine, state, saveState, loading } = useRoutineData(curDateISO);
+  const { events: calendarEvents, loading: calLoading, error: calError } = useCalendarEvents(googleAccessToken, curDateISO);
   
   const [collapsed, setCollapsed] = useState<Set<string>>(new Set());
   const [isNoteOpen, setIsNoteOpen] = useState(false);
   const [dayNote, setDayNote] = useState('');
+
+  const handleReconnectCalendar = async () => {
+    try {
+      const result = await signInWithPopup(auth, googleProvider);
+      const credential = GoogleAuthProvider.credentialFromResult(result);
+      if (credential?.accessToken) {
+        localStorage.setItem('gcal_token', credential.accessToken);
+        localStorage.setItem('gcal_token_time', Date.now().toString());
+        setGoogleAccessToken(credential.accessToken);
+      }
+    } catch (error) {
+      console.error('Error reconnecting calendar:', error);
+    }
+  };
 
   // Load existing notes for the day when date changes
   useEffect(() => {
@@ -192,6 +209,50 @@ export const DayView: React.FC = () => {
         <button onClick={handleDeselAll} className="px-3 py-1.5 rounded-lg text-xs font-semibold border border-bg-hover bg-bg-card text-fg-muted hover:bg-bg-hover transition-colors">Deseleziona</button>
         <button onClick={handleExpandAll} className="px-3 py-1.5 rounded-lg text-xs font-semibold border border-bg-hover bg-bg-card text-fg-muted hover:bg-bg-hover transition-colors">Espandi</button>
         <button onClick={handleCollapseAll} className="px-3 py-1.5 rounded-lg text-xs font-semibold border border-bg-hover bg-bg-card text-fg-muted hover:bg-bg-hover transition-colors">Comprimi</button>
+      </div>
+
+      {/* Calendar Events */}
+      <div className="px-5 pb-4">
+        <div className="flex items-center justify-between mb-3">
+          <span className="text-[13px] font-bold text-fg-muted uppercase tracking-wide">Google Calendar</span>
+          {(!googleAccessToken || calError === 'AUTH_REQUIRED') && (
+            <button 
+              onClick={handleReconnectCalendar}
+              className="text-[11px] font-bold text-accent bg-accent/10 px-2 py-1 rounded-md"
+            >
+              Collega Calendario
+            </button>
+          )}
+        </div>
+        
+        {googleAccessToken && !calError && (
+          <div className="space-y-2">
+            {calLoading ? (
+              <div className="text-xs text-fg-muted">Sincronizzazione...</div>
+            ) : calendarEvents.length === 0 ? (
+              <div className="text-xs text-fg-muted">Nessun evento per oggi.</div>
+            ) : (
+              calendarEvents.map(event => {
+                const startTime = event.start.dateTime 
+                  ? new Date(event.start.dateTime).toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' })
+                  : 'Tutto il giorno';
+                
+                return (
+                  <a 
+                    key={event.id} 
+                    href={event.htmlLink}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-start gap-3 p-3 rounded-xl bg-bg-card border border-bg-hover hover:border-accent/50 transition-colors group"
+                  >
+                    <div className="text-xs font-bold text-accent font-mono shrink-0 mt-0.5">{startTime}</div>
+                    <div className="text-sm font-medium text-fg-main leading-tight group-hover:text-accent transition-colors">{event.summary}</div>
+                  </a>
+                );
+              })
+            )}
+          </div>
+        )}
       </div>
 
       {/* Day Note */}

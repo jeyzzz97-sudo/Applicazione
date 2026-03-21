@@ -1,13 +1,22 @@
 import React, { useState } from 'react';
 import { signInWithPopup, auth, googleProvider } from '../firebase';
+import { GoogleAuthProvider } from 'firebase/auth';
+import { useAuth } from '../contexts/AuthContext';
 
 export const Login: React.FC = () => {
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const { setGoogleAccessToken } = useAuth();
 
   const handleLogin = async () => {
     setErrorMsg(null);
     try {
-      await signInWithPopup(auth, googleProvider);
+      const result = await signInWithPopup(auth, googleProvider);
+      const credential = GoogleAuthProvider.credentialFromResult(result);
+      if (credential?.accessToken) {
+        localStorage.setItem('gcal_token', credential.accessToken);
+        localStorage.setItem('gcal_token_time', Date.now().toString());
+        setGoogleAccessToken(credential.accessToken);
+      }
     } catch (error: any) {
       console.error('Login error:', error);
       setErrorMsg(error.message || 'Errore durante il login. Riprova.');
