@@ -10,7 +10,7 @@ interface HeaderProps {
 
 export const Header: React.FC<HeaderProps> = ({ isSyncing = false }) => {
   const { user } = useAuth();
-  const { theme, toggleTheme } = useTheme();
+  const { theme, toggleTheme, themeColor, setThemeColor } = useTheme();
 
   const handleLogout = () => {
     if (window.confirm(`Connesso come:\n${user?.email}\n\nVuoi disconnetterti?`)) {
@@ -34,6 +34,19 @@ export const Header: React.FC<HeaderProps> = ({ isSyncing = false }) => {
           />
         </div>
         <div className="flex items-center gap-3">
+          <div className="relative flex items-center justify-center w-8 h-8 rounded-full border-2 border-bg-card shadow-sm overflow-hidden cursor-pointer">
+            <input 
+              type="color" 
+              value={themeColor || (theme === 'dark' ? '#48BB78' : '#1B4D3E')}
+              onChange={(e) => setThemeColor(e.target.value)}
+              className="absolute inset-[-10px] w-12 h-12 cursor-pointer opacity-0"
+              title="Cambia colore tema"
+            />
+            <div 
+              className="w-full h-full pointer-events-none"
+              style={{ backgroundColor: themeColor || (theme === 'dark' ? '#48BB78' : '#1B4D3E') }}
+            />
+          </div>
           <button 
             onClick={toggleTheme}
             className="bg-transparent text-fg-muted border border-bg-hover px-3 py-1.5 rounded-xl text-xs font-semibold hover:bg-bg-hover transition-all"
