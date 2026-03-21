@@ -18,6 +18,7 @@ export interface DiaryEntry {
   id: string;
   time: string;
   text: string;
+  tags?: string[];
 }
 
 export interface DiaryDay {
